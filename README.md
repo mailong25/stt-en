@@ -21,8 +21,7 @@ wget https://storage.googleapis.com/mailong25/stt_en_conformer_ctc_large.bin
 
 ### Infernece
 ```
-
-## Init model
+# Init model
 
 import os
 import nemo.collections.asr as nemo_asr
@@ -31,18 +30,19 @@ import torch
 import numpy as np
 from torch.nn.utils.rnn import pad_sequence
 
-asr_model = nemo_asr.models.ASRModel.from_pretrained(model_name="stt_en_conformer_ctc_large")
-alpha = 0.5
+ASR_MODEL_NAME = "stt_en_conformer_ctc_large"
+LM_MODEL_PATH = '/path/to/pretrained LM model.bin'
+
+asr_model = nemo_asr.models.ASRModel.from_pretrained(model_name=ASR_MODEL_NAME)
 vocab = asr_model.decoder.vocabulary
 asr_model.eval()
-
 vocab.append('_')
 beam_search_lm = ctcdecode.CTCBeamDecoder(
     [chr(idx + 100) for idx in range(len(vocab))],
-    model_path='/path/to/pretrained LM model.bin',
+    model_path=LM_MODEL_PATH,
     alpha=0.5,
     beta=0.5,
-    beam_width=16,
+    beam_width=24,
     num_processes=max(os.cpu_count(), 1),
     blank_id=len(vocab) - 1,
     cutoff_prob=1.0,
@@ -86,6 +86,6 @@ def transcribe(asr_model, lm_model, file):
     
     return results
 
-### Call the inference function
+# Call the inference function
 transcripts = transcribe(asr_model, beam_search_lm, ['path/to/audio1.wav,path/to/audio2.wav'])
 ```
